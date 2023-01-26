@@ -7,21 +7,14 @@
 
 import React from 'react';
 import axios from 'axios';
-import {
-  Button,
-  SafeAreaView,
-  StatusBar,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
 
 import { useAuth0, Auth0Provider, Credentials } from 'react-native-auth0';
 import { AUTH0_AUDIENCE, AUTH0_DOMAIN, AUTH0_CLIENT_ID, API_URL } from '@env';
 
 import * as Keychain from 'react-native-keychain';
 
-import { Colors, Header } from 'react-native/Libraries/NewAppScreen';
+import { Button, Text, useTheme } from 'react-native-paper';
 
 function LoginButton({
   onComplete,
@@ -45,7 +38,11 @@ function LoginButton({
     }
   };
 
-  return <Button onPress={onPress} title="Log in" />;
+  return (
+    <Button mode="contained" onPress={onPress}>
+      Log in
+    </Button>
+  );
 }
 
 function LogoutButton({
@@ -64,7 +61,11 @@ function LogoutButton({
     }
   };
 
-  return <Button onPress={onPress} title="Log out" />;
+  return (
+    <Button mode="contained" onPress={onPress}>
+      Log out
+    </Button>
+  );
 }
 
 function Profile() {
@@ -72,31 +73,31 @@ function Profile() {
 
   return (
     <>
-      {user && <Text>Logged in as {user.name}</Text>}
-      {!user && <Text>Not logged in</Text>}
+      {user && (
+        <Text variant="titleLarge">Logged in as {JSON.stringify(user)}</Text>
+      )}
+      {!user && <Text variant="titleLarge">Not logged in</Text>}
     </>
   );
 }
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const theme = useTheme();
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const backgroundStyle = { backgroundColor: theme.colors.background };
 
   return (
     <Auth0Provider domain={AUTH0_DOMAIN} clientId={AUTH0_CLIENT_ID}>
       <SafeAreaView style={backgroundStyle}>
         <StatusBar
-          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          barStyle={theme.dark ? 'light-content' : 'dark-content'}
           backgroundColor={backgroundStyle.backgroundColor}
         />
-        <Header />
         <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
+          style={[
+            styles.container,
+            { backgroundColor: theme.colors.background },
+          ]}>
           <Profile />
           <LoginButton
             onComplete={async (credentials) => {
@@ -120,6 +121,7 @@ function App(): JSX.Element {
           />
 
           <Button
+            mode="contained"
             onPress={async () => {
               const result = await Keychain.getGenericPassword({
                 accessControl: Keychain.ACCESS_CONTROL.USER_PRESENCE,
@@ -137,13 +139,21 @@ function App(): JSX.Element {
               axios.get(API_URL, {
                 headers: { Authorization: `Bearer ${accessToken}` },
               });
-            }}
-            title="Log token"
-          />
+            }}>
+            Log token
+          </Button>
         </View>
       </SafeAreaView>
     </Auth0Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+});
 
 export default App;
