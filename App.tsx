@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 
 import { useAuth0, Auth0Provider } from 'react-native-auth0';
+import { AUTH0_AUDIENCE, AUTH0_DOMAIN, AUTH0_CLIENT_ID } from '@env';
 
 import { Colors, Header } from 'react-native/Libraries/NewAppScreen';
 
@@ -31,7 +32,7 @@ function LoginButton({
     try {
       await authorize({
         scope: 'openid profile email',
-        audience: 'http://localhost:3000',
+        audience: AUTH0_AUDIENCE,
       });
       const credentials = await getCredentials();
       onComplete(credentials.accessToken);
@@ -78,9 +79,7 @@ function App(): JSX.Element {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   return (
-    <Auth0Provider
-      domain={'dev-jadsiv7yg757c45i.us.auth0.com'}
-      clientId={'lJDX6L7y7pdXk5x3F7GIu1HnmcYe52XZ'}>
+    <Auth0Provider domain={AUTH0_DOMAIN} clientId={AUTH0_CLIENT_ID}>
       <SafeAreaView style={backgroundStyle}>
         <StatusBar
           barStyle={isDarkMode ? 'light-content' : 'dark-content'}
