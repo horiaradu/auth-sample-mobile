@@ -5,53 +5,66 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import axios from 'axios';
+import React, { useState } from 'react';
 import {
+  Button,
   SafeAreaView,
-  ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   useColorScheme,
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import { useAuth0, Auth0Provider } from 'react-native-auth0';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import { Colors, Header } from 'react-native/Libraries/NewAppScreen';
 
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+function LoginButton({
+  onComplete,
+}: {
+  onComplete: (accessToken: string) => void;
+}) {
+  const { authorize, getCredentials } = useAuth0();
+
+  const onPress = async () => {
+    try {
+      await authorize({
+        scope: 'openid profile email',
+        audience: 'http://localhost:3000',
+      });
+      const credentials = await getCredentials();
+      onComplete(credentials.accessToken);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return <Button onPress={onPress} title="Log in" />;
+}
+
+function LogoutButton() {
+  const { clearSession } = useAuth0();
+
+  const onPress = async () => {
+    try {
+      await clearSession();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return <Button onPress={onPress} title="Log out" />;
+}
+
+function Profile() {
+  const { user } = useAuth0();
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <>
+      {user && <Text>Logged in as {user.name}</Text>}
+      {!user && <Text>Not logged in</Text>}
+    </>
   );
 }
 
@@ -62,57 +75,39 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
+    <Auth0Provider
+      domain={'dev-jadsiv7yg757c45i.us.auth0.com'}
+      clientId={'lJDX6L7y7pdXk5x3F7GIu1HnmcYe52XZ'}>
+      <SafeAreaView style={backgroundStyle}>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={backgroundStyle.backgroundColor}
+        />
         <Header />
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <Profile />
+          <LoginButton onComplete={(token) => setAccessToken(token)} />
+          <LogoutButton />
+
+          <Button
+            onPress={async () => {
+              console.log('accessToken', accessToken);
+              axios.get('http://localhost:3000', {
+                headers: { Authorization: `Bearer ${accessToken}` },
+              });
+            }}
+            title="Log token"
+          />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Auth0Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
