@@ -24,6 +24,13 @@
 - if token is expired, try to refresh
 - if can't refresh, force re-login
 
+## Custom screens
+
+- sign up / login with 2FA, with custom / native screens
+- prompt user to enable biometrics
+- if yes: store in secure storage
+- if not, always need to login
+
 # Key take aways
 
 ## Auth0 is used as a **real identity provider**
